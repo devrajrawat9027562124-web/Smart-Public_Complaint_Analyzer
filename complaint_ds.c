@@ -25,8 +25,7 @@ void makeLowercase(const char *source, char *destination, size_t size)
 }
 
 /* Check whether any keyword occurs in the complaint description */
-int containsKeyword(const char *description,
-                    const char *keywords[],
+int containsKeyword(const char *description, const char *keywords[],
                     int count)
 {
     char lowerDescription[200];
