@@ -1,0 +1,5 @@
+123|s|road|pothole near road|rajpur|Medium|2|In Progress|Public Works|Not Assigned
+1234|stuti|water|pipe leakage|clement toen|Medium|2|Pending|Not Assigned|Not Assigned
+12341|riya|other|dangerous gas leakage|nehru colony|High|3|Pending|Not Assigned|Not Assigned
+123|str|road|pipe leakage|raipur|Medium|2|Pending|Not Assigned|Not Assigned
+1|s|Road|broken|k|Medium|2|Pending|Not Assigned|Not Assigned
