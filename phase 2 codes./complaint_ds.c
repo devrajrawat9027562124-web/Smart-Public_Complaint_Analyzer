@@ -4,18 +4,15 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-
 #include "complaint_ds.h"
 
 /* Convert text to lowercase for case-insensitive matching */
 void makeLowercase(const char *source, char *destination, size_t size)
 {
     size_t i = 0;
-
-    if (size == 0)
+     if (size == 0)
         return;
-
-    while (source[i] != '\0' && i < size - 1)
+     while (source[i] != '\0' && i < size - 1)
     {
         destination[i] = (char)tolower((unsigned char)source[i]);
         i++;
@@ -41,8 +38,6 @@ int containsKeyword(const char *description,const char *keywords[],int count)
 
     return 0;
 }
-
-
 /* HIGH priority keywords: emergencies and immediate hazards */
 const char *highKeywords[] = {
     "fire", "wildfire", "electrocution", "electric shock",
