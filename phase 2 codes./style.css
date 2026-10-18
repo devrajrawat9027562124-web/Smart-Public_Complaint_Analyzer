@@ -1,0 +1,182 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background: #f4f6f9;
+    color: #263445;
+}
+
+header {
+    background: #173b65;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0 0 12px;
+    font-size: 26px;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    width: 92%;
+    max-width: 850px;
+    margin: 30px auto;
+}
+
+.hero,
+.card {
+    background: white;
+    border: 1px solid #dce3eb;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 22px;
+}
+
+.hero {
+    text-align: center;
+    padding: 40px 24px;
+}
+
+h2 {
+    color: #173b65;
+}
+
+.actions {
+    margin-top: 22px;
+}
+
+.button,
+button {
+    display: inline-block;
+    padding: 10px 16px;
+    margin: 5px 5px 5px 0;
+    border: none;
+    border-radius: 5px;
+    background: #1769aa;
+    color: white;
+    font-size: 15px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button:hover,
+button:hover {
+    background: #104c80;
+}
+
+.button.secondary {
+    background: #e3ebf5;
+    color: #173b65;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+input,
+select,
+textarea {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 11px;
+    border: 1px solid #bcc9d8;
+    border-radius: 5px;
+    background: white;
+    color: #263445;
+    font: inherit;
+}
+
+textarea {
+    resize: vertical;
+}
+
+form button {
+    margin-top: 20px;
+}
+
+.message {
+    margin: 16px 0;
+    overflow-wrap: anywhere;
+}
+
+.success {
+    color: #176534;
+}
+
+.error {
+    color: #b42318;
+}
+
+.complaint-card {
+    margin-top: 20px;
+}
+
+.complaint-card h3 {
+    color: #173b65;
+    overflow-wrap: anywhere;
+}
+
+.danger-button {
+    background: #b42318;
+}
+
+.danger-button:hover {
+    background: #8e1b13;
+}
+
+#trackResult {
+    margin-top: 20px;
+    overflow-wrap: anywhere;
+}
+
+footer {
+    margin-top: 35px;
+    padding: 18px;
+    text-align: center;
+    color: #53657a;
+}
+
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 21px;
+    }
+
+    nav {
+        gap: 12px;
+    }
+
+    .container {
+        width: 95%;
+        margin: 18px auto;
+    }
+
+    .hero,
+    .card {
+        padding: 17px;
+    }
+}

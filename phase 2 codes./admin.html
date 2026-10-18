@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+<header>
+    <h1>Smart Public Complaint Analyzer</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="register.html">Register Complaint</a>
+        <a href="track.html">Track Complaint</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="card">
+        <h2>Admin Panel</h2>
+        <p>View, search, assign and manage registered complaints.</p>
+
+        <label for="adminSearch">Search by ID, citizen, category or location</label>
+        <input id="adminSearch" type="text" placeholder="Enter search text">
+
+        <label for="sortPriority">Sort complaints</label>
+        <select id="sortPriority">
+            <option value="newest">Newest first</option>
+            <option value="priority">Highest priority first</option>
+        </select>
+
+        <p id="adminMessage" class="message" aria-live="polite"></p>
+        <div id="complaintList"></div>
+    </section>
+</main>
+
+<footer>Smart Public Complaint Analyzer</footer>
+</body>
+</html>

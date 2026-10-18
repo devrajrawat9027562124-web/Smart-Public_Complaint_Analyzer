@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Complaint</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+<header>
+    <h1>Smart Public Complaint Analyzer</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="register.html">Register Complaint</a>
+        <a href="track.html">Track Complaint</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="card">
+        <h2>Register a Complaint</h2>
+
+        <form id="complaintForm">
+            <label for="citizenId">Citizen ID</label>
+            <input id="citizenId" type="text" maxlength="30" required>
+
+            <label for="name">Citizen Name</label>
+            <input id="name" type="text" maxlength="80" required>
+
+            <label for="category">Complaint Category</label>
+            <select id="category" required>
+                <option value="">Select category</option>
+                <option>Road</option>
+                <option>Water Supply</option>
+                <option>Electricity</option>
+                <option>Sanitation</option>
+                <option>Street Light</option>
+                <option>Other</option>
+            </select>
+
+            <label for="location">Complaint Location</label>
+            <input id="location" type="text" maxlength="150" required>
+
+            <label for="description">Complaint Description</label>
+            <textarea id="description" rows="4" maxlength="1000" required></textarea>
+
+            <button type="submit">Submit Complaint</button>
+        </form>
+
+        <div id="registerMessage" class="message" aria-live="polite"></div>
+    </section>
+</main>
+
+<footer>Smart Public Complaint Analyzer</footer>
+</body>
+</html>

@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Complaint</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+<header>
+    <h1>Smart Public Complaint Analyzer</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="register.html">Register Complaint</a>
+        <a href="track.html">Track Complaint</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="card">
+        <h2>Track a Complaint</h2>
+        <form id="trackForm">
+            <label for="complaintId">Numeric Complaint ID</label>
+            <input id="complaintId" type="number" min="1001" step="1"
+                   placeholder="Example: 1001" required>
+            <button type="submit">Search Complaint</button>
+        </form>
+        <div id="trackMessage" class="message" aria-live="polite"></div>
+        <div id="trackResult"></div>
+    </section>
+</main>
+
+<footer>Smart Public Complaint Analyzer</footer>
+</body>
+</html>
