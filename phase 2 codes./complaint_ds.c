@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,8 +26,7 @@ int containsKeyword(const char *description,const char *keywords[],int count)
     char lowerDescription[200];
     int i;
 
-    makeLowercase(description, lowerDescription,
-                  sizeof(lowerDescription));
+    makeLowercase(description, lowerDescription,sizeof(lowerDescription));
 
     for (i = 0; i < count; i++)
     {
@@ -40,7 +38,9 @@ int containsKeyword(const char *description,const char *keywords[],int count)
 }
 /* HIGH priority keywords: emergencies and immediate hazards */
 const char *highKeywords[] = {
-    "fire", "wildfire", "electrocution", "electric shock",
+    "fire", "wildfire", "electrocution", "electric shock","landsklide", "earthquake", "tsunami", "hurricane",
+    "tornado", "cyclone", "flood", "storm surge", "avalanche", "volcanic eruption", "chemical spill",
+    "toxic gas leak","dangerous","major accident", "life-threatening", "emergency", "hazardous",
     "exposed wire", "live wire", "sparking wire", "gas leak",
     "severe flooding", "flash flood", "building collapse",
     "wall collapse", "bridge collapse", "road collapse",
@@ -173,8 +173,6 @@ const char *lowKeywords[] = {
 const int lowCount =
     sizeof(lowKeywords) / sizeof(lowKeywords[0]);
 
-
-
 /* Save all complaints to a text file */
 void saveComplaints(ComplaintNode* head)
 {
@@ -186,7 +184,6 @@ void saveComplaints(ComplaintNode* head)
         printf("Error saving complaints!\n");
         return;
     }
-
     while (current != NULL)
     {
         fprintf(file, "%d|%s|%s|%s|%s|%s|%d|%s|%s|%s\n",
@@ -206,7 +203,6 @@ void saveComplaints(ComplaintNode* head)
 
     fclose(file);
 }
-
 
 /* Load saved complaints from the text file */
 void loadComplaints(ComplaintNode** head)
@@ -271,10 +267,14 @@ void loadComplaints(ComplaintNode** head)
 }
 
 /* Register a new complaint */
+
+/* Register a new complaint */
 void addComplaint(ComplaintNode** head)
 {
     ComplaintNode* newNode;
     ComplaintNode* temp;
+    ComplaintNode* current;
+    int nextID = 1;
 
     newNode = (ComplaintNode*)malloc(sizeof(ComplaintNode));
 
@@ -284,9 +284,19 @@ void addComplaint(ComplaintNode** head)
         return;
     }
 
-    printf("Enter Complaint ID: ");
-    scanf("%d", &newNode->complaintID);
-    getchar();
+    /* Automatically generate a unique complaint ID */
+    current = *head;
+
+    while (current != NULL)
+    {
+        if (current->complaintID >= nextID)
+            nextID = current->complaintID + 1;
+
+        current = current->next;
+    }
+
+    newNode->complaintID = nextID;
+    printf("System Assigned Complaint ID: %d\n", newNode->complaintID);
 
     printf("Enter Citizen Name: ");
     fgets(newNode->citizenName, sizeof(newNode->citizenName), stdin);
@@ -329,11 +339,12 @@ void addComplaint(ComplaintNode** head)
     }
 
     printf("\nComplaint registered successfully!\n");
+    printf("Complaint ID: %d\n", newNode->complaintID);
     printf("Status: %s\n", newNode->status);
     printf("Department: %s\n", newNode->department);
+
     saveComplaints(*head);
 }
-
 
 /* Display all complaints */
 void displayComplaints(ComplaintNode* head)
@@ -363,7 +374,6 @@ void displayComplaints(ComplaintNode* head)
     }
 }
 
-
 /* Search complaint by ID */
 void searchComplaint(ComplaintNode* head, int id)
 {
@@ -392,7 +402,6 @@ void searchComplaint(ComplaintNode* head, int id)
     printf("\nComplaint not found.\n");
 }
 
-
 /* Update complaint status */
 
 void updateStatus(ComplaintNode* head, int id, const char newStatus[])
@@ -411,8 +420,7 @@ void updateStatus(ComplaintNode* head, int id, const char newStatus[])
 
             char oldStatus[20];
 
-            snprintf(oldStatus, sizeof(oldStatus), "%s",
-                     current->status);
+            snprintf(oldStatus, sizeof(oldStatus), "%s",current->status);
 
             saveStatusHistory(current->complaintID, oldStatus, newStatus);
 
@@ -432,11 +440,8 @@ void updateStatus(ComplaintNode* head, int id, const char newStatus[])
     printf("\nComplaint not found.\n");
 }
 
-
-
 /* Assign department */
-void assignDepartment(ComplaintNode* head, int id,
-                      const char newDepartment[])
+void assignDepartment(ComplaintNode* head, int id,const char newDepartment[])
 {
     ComplaintNode* current = head;
 
@@ -459,10 +464,8 @@ void assignDepartment(ComplaintNode* head, int id,
     printf("\nComplaint not found.\n");
 }
 
-
 /* Assign employee */
-void assignEmployee(ComplaintNode* head, int id,
-                    const char newEmployee[])
+void assignEmployee(ComplaintNode* head, int id, const char newEmployee[])
 {
     ComplaintNode* current = head;
 
@@ -484,7 +487,6 @@ void assignEmployee(ComplaintNode* head, int id,
 
     printf("\nComplaint not found.\n");
 }
-
 
 /* Insert complaint into priority queue */
 void insertPriorityQueue(PriorityNode** front, ComplaintNode* complaint)
@@ -525,7 +527,6 @@ void insertPriorityQueue(PriorityNode** front, ComplaintNode* complaint)
     current->next = newNode;
 }
 
-
 /* Display priority queue */
 void displayPriorityQueue(PriorityNode* front)
 {
@@ -550,7 +551,6 @@ void displayPriorityQueue(PriorityNode* front)
         current = current->next;
     }
 }
-
 
 /* Sort complaints by priority */
 void sortComplaintsByPriority(ComplaintNode* head)
@@ -594,7 +594,6 @@ void sortComplaintsByPriority(ComplaintNode* head)
     printf("\nComplaints sorted by priority successfully!\n");
 }
 
-
 /* Automatically assign complaint priority */
 
 void assignPriority(ComplaintNode* complaint)
@@ -602,11 +601,9 @@ void assignPriority(ComplaintNode* complaint)
     char lowerDescription[200];
     char lowerCategory[50];
 
-    makeLowercase(complaint->description, lowerDescription,
-                  sizeof(lowerDescription));
+    makeLowercase(complaint->description, lowerDescription,sizeof(lowerDescription));
 
-    makeLowercase(complaint->category, lowerCategory,
-                  sizeof(lowerCategory));
+    makeLowercase(complaint->category, lowerCategory,sizeof(lowerCategory));
 
     /* HIGH priority */
     if (containsKeyword(lowerDescription, highKeywords, highCount))
@@ -615,8 +612,7 @@ void assignPriority(ComplaintNode* complaint)
         complaint->priorityValue = 3;
     }
     /* MEDIUM priority */
-    else if (containsKeyword(lowerDescription,
-                             mediumKeywords, mediumCount))
+    else if (containsKeyword(lowerDescription,mediumKeywords, mediumCount))
     {
         strcpy(complaint->priority, "Medium");
         complaint->priorityValue = 2;
@@ -628,9 +624,7 @@ void assignPriority(ComplaintNode* complaint)
         complaint->priorityValue = 1;
     }
     /* Category fallback */
-    else if (strcmp(lowerCategory, "road") == 0 ||
-             strcmp(lowerCategory, "water") == 0 ||
-             strcmp(lowerCategory, "garbage") == 0)
+    else if (strcmp(lowerCategory, "road") == 0 || strcmp(lowerCategory, "water") == 0 ||strcmp(lowerCategory, "garbage") == 0)
     {
         strcpy(complaint->priority, "Medium");
         complaint->priorityValue = 2;
@@ -679,8 +673,7 @@ void displayComplaintStatistics(ComplaintNode* head)
     printf("===========================\n");
 }
 
-void saveStatusHistory(int complaintID, const char oldStatus[],
-                       const char newStatus[])
+void saveStatusHistory(int complaintID, const char oldStatus[], const char newStatus[])
 {
     FILE* file = fopen("status_history.txt", "a");
     time_t now;
@@ -698,11 +691,9 @@ void saveStatusHistory(int complaintID, const char oldStatus[],
 
     if (localTime != NULL)
     {
-        strftime(dateTime, sizeof(dateTime),
-                 "%Y-%m-%d %H:%M:%S", localTime);
+        strftime(dateTime, sizeof(dateTime),"%Y-%m-%d %H:%M:%S", localTime);
 
-        fprintf(file, "ID: %d | Old: %s | New: %s | Date: %s\n",
-                complaintID, oldStatus, newStatus, dateTime);
+        fprintf(file, "ID: %d | Old: %s | New: %s | Date: %s\n",complaintID, oldStatus, newStatus, dateTime);
     }
 
     fclose(file);
@@ -769,5 +760,3 @@ void filterComplaintsByCategory(ComplaintNode* head, const char category[])
         printf("No complaints found in this category.\n");
     }
 }
-
-
