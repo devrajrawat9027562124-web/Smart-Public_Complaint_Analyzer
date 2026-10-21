@@ -1,11 +1,8 @@
+
 #ifndef COMPLAINT_DS_H
 #define COMPLAINT_DS_H
-#include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+/* Structure for storing complaint details */
 typedef struct ComplaintNode
 {
     int complaintID;
@@ -23,7 +20,7 @@ typedef struct ComplaintNode
 
 } ComplaintNode;
 
-
+/* Structure for priority queue */
 typedef struct PriorityNode
 {
     ComplaintNode* complaint;
@@ -31,30 +28,37 @@ typedef struct PriorityNode
 
 } PriorityNode;
 
-
+/* Complaint management functions */
 void addComplaint(ComplaintNode** head);
-void saveComplaints(ComplaintNode* head);
-void loadComplaints(ComplaintNode** head);
-void makeLowercase(const char *source, char *destination, size_t size);
-int containsKeyword(const char *description,const char *keywords[], int count);
-void assignPriority(ComplaintNode* complaint);
 void displayComplaints(ComplaintNode* head);
 void searchComplaint(ComplaintNode* head, int id);
-void updateStatus(ComplaintNode* head, int id, const char newStatus[]);
-void assignDepartment(ComplaintNode* head, int id, const char newDepartment[]);
-void assignEmployee(ComplaintNode* head, int id, const char newEmployee[]);
-void insertPriorityQueue(PriorityNode** front, ComplaintNode* complaint);
+
+/* Status and assignment functions */
+void updateStatus(ComplaintNode* head, int id,const char newStatus[]);
+
+void assignDepartment(ComplaintNode* head, int id,const char newDepartment[]);
+
+void assignEmployee(ComplaintNode* head, int id,const char newEmployee[]);
+
+/* Priority queue functions */
+void insertPriorityQueue(PriorityNode** front,ComplaintNode* complaint);
+
 void displayPriorityQueue(PriorityNode* front);
 void sortComplaintsByPriority(ComplaintNode* head);
+
+/* Priority calculation */
+void assignPriority(ComplaintNode* complaint);
+
+/* File handling */
+void saveComplaints(ComplaintNode* head);
+void loadComplaints(ComplaintNode** head);
+void saveStatusHistory(int complaintID,const char oldStatus[],const char newStatus[]);
+
+/* Statistics and filters */
 void displayComplaintStatistics(ComplaintNode* head);
-void saveStatusHistory(int complaintID, const char oldStatus[],const char newStatus[]);
-void filterComplaintsByStatus(ComplaintNode* head, const char status[]);
-void filterComplaintsByCategory(ComplaintNode* head, const char category[]);
 
+void filterComplaintsByStatus(ComplaintNode* head,const char status[]);
 
-
-#ifdef __cplusplus
-}
-#endif
+void filterComplaintsByCategory(ComplaintNode* head,const char category[]);
 
 #endif
