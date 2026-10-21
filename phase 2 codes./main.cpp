@@ -26,26 +26,21 @@ void citizenMenu()
 
         switch (choice)
         {
-            
-    case 1:
+            case 1:
 {
     addComplaint(&head);
 
-    if (head != NULL)
+    ComplaintNode* current = head;
+
+    while (current->next != NULL)
     {
-        ComplaintNode* current = head;
-
-        while (current->next != NULL)
-        {
-            current = current->next;
-        }
-
-        insertPriorityQueue(&priorityFront, current);
+        current = current->next;
     }
+
+    insertPriorityQueue(&priorityFront, current);
 
     break;
 }
-
 
             case 2:
                 displayComplaints(head);
@@ -86,10 +81,7 @@ void adminMenu()
         cout << "4. Assign Employee" << endl;
         cout << "5. View Priority Queue" << endl;
         cout << "6. Sort Complaints by Priority" << endl;
-        cout << "7. Admin Dashboard & Statistics" << endl;
-        cout << "8. Filter Complaints" << endl;
-        cout << "9. Back to Main Menu" << endl;
-   
+        cout << "7. Back to Main Menu" << endl;
 
         cout << endl;
         cout << "Enter your choice: ";
@@ -231,82 +223,9 @@ case 3:
 case 6:
     sortComplaintsByPriority(head);
     break;
+
 case 7:
-    displayComplaintStatistics(head);
-    break;
-
-case 8:
-{
-    int filterChoice;
-
-    cout << "\n===== FILTER COMPLAINTS =====\n";
-    cout << "1. Filter by Status\n";
-    cout << "2. Filter by Category\n";
-    cout << "3. Show All Complaints\n";
-    cout << "Enter choice: ";
-    cin >> filterChoice;
-
-    if (filterChoice == 1)
-    {
-        int statusChoice;
-
-        cout << "\n1. Pending\n";
-        cout << "2. In Progress\n";
-        cout << "3. Resolved\n";
-        cout << "Enter status choice: ";
-        cin >> statusChoice;
-
-        if (statusChoice == 1)
-            filterComplaintsByStatus(head, "Pending");
-        else if (statusChoice == 2)
-            filterComplaintsByStatus(head, "In Progress");
-        else if (statusChoice == 3)
-            filterComplaintsByStatus(head, "Resolved");
-        else
-            cout << "Invalid status choice.\n";
-    }
-    else if (filterChoice == 2)
-    {
-        int categoryChoice;
-
-        cout << "\n1. Road\n";
-        cout << "2. Electricity\n";
-        cout << "3. Water Supply\n";
-        cout << "4. Garbage\n";
-        cout << "5. Other\n";
-        cout << "Enter category choice: ";
-        cin >> categoryChoice;
-
-        if (categoryChoice == 1)
-            filterComplaintsByCategory(head, "Road");
-        else if (categoryChoice == 2)
-            filterComplaintsByCategory(head, "Electricity");
-        else if (categoryChoice == 3)
-            filterComplaintsByCategory(head, "Water Supply");
-        else if (categoryChoice == 4)
-            filterComplaintsByCategory(head, "Garbage");
-        else if (categoryChoice == 5)
-            filterComplaintsByCategory(head, "Other");
-        else
-            cout << "Invalid category choice.\n";
-      
-    }
-    else if (filterChoice == 3)
-    {
-        displayComplaints(head);
-    }
-    else
-    {
-        cout << "Invalid filter choice.\n";
-    }
-
-    break;
-}
-
-
-case 9:
     return;
-
 
 default:
     cout << "Invalid choice." << endl;
@@ -317,15 +236,6 @@ default:
 int main()
 {
     int choice;
-     loadComplaints(&head);
-
-    ComplaintNode* current = head;
-
-    while (current != NULL)
-    {
-        insertPriorityQueue(&priorityFront, current);
-        current = current->next;
-    }
 
     while (true)
     {
