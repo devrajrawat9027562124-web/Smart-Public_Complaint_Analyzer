@@ -265,6 +265,9 @@ void loadComplaints(ComplaintNode** head)
 
     fclose(file);
 }
+
+
+
 /* Register a new complaint */
 void addComplaint(ComplaintNode** head)
 {
@@ -446,9 +449,7 @@ void assignDepartment(ComplaintNode* head, int id,const char newDepartment[])
     {
         if (current->complaintID == id)
         {
-            snprintf(current->department, sizeof(current->department),
-                     "%s", newDepartment);
-
+            snprintf(current->department, sizeof(current->department), "%s", newDepartment);
             printf("\nDepartment assigned successfully!\n");
             printf("Department: %s\n", current->department);
             saveComplaints(head);
@@ -470,9 +471,7 @@ void assignEmployee(ComplaintNode* head, int id, const char newEmployee[])
     {
         if (current->complaintID == id)
         {
-            snprintf(current->employee, sizeof(current->employee),
-                     "%s", newEmployee);
-
+            snprintf(current->employee, sizeof(current->employee),"%s", newEmployee);
             printf("\nEmployee assigned successfully!\n");
             printf("Employee: %s\n", current->employee);
             saveComplaints(head);
@@ -502,9 +501,7 @@ void insertPriorityQueue(PriorityNode** front, ComplaintNode* complaint)
     newNode->complaint = complaint;
     newNode->next = NULL;
 
-    if (*front == NULL ||
-        complaint->priorityValue >
-        (*front)->complaint->priorityValue)
+    if (*front == NULL ||complaint->priorityValue >(*front)->complaint->priorityValue)
     {
         newNode->next = *front;
         *front = newNode;
@@ -513,9 +510,7 @@ void insertPriorityQueue(PriorityNode** front, ComplaintNode* complaint)
 
     current = *front;
 
-    while (current->next != NULL &&
-           current->next->complaint->priorityValue >=
-           complaint->priorityValue)
+    while (current->next != NULL && current->next->complaint->priorityValue >=complaint->priorityValue)
     {
         current = current->next;
     }
@@ -549,47 +544,47 @@ void displayPriorityQueue(PriorityNode* front)
     }
 }
 
-/* Sort complaints by priority */
-void sortComplaintsByPriority(ComplaintNode* head)
-{
-    ComplaintNode* current;
-    ComplaintNode* compare;
 
-    if (head == NULL)
+void sortComplaintsByPriority(ComplaintNode** head)
+{
+    int swapped;
+    ComplaintNode **ptr;
+    ComplaintNode *a;
+    ComplaintNode *b;
+
+    if (*head == NULL)
     {
         printf("\nNo complaints to sort.\n");
         return;
     }
 
-    current = head;
-
-    while (current != NULL)
+    do
     {
-        compare = current->next;
+        swapped = 0;
+        ptr = head;
 
-        while (compare != NULL)
+        while ((*ptr)->next != NULL)
         {
-            if (current->priorityValue < compare->priorityValue)
+            a = *ptr;
+            b = a->next;
+
+            if (a->priorityValue < b->priorityValue)
             {
-                int tempValue = current->priorityValue;
-                char tempPriority[sizeof(current->priority)];
+                a->next = b->next;
+                b->next = a;
+                *ptr = b;
 
-                current->priorityValue = compare->priorityValue;
-                compare->priorityValue = tempValue;
-
-                strcpy(tempPriority, current->priority);
-                strcpy(current->priority, compare->priority);
-                strcpy(compare->priority, tempPriority);
+                swapped = 1;
             }
 
-            compare = compare->next;
+            ptr = &((*ptr)->next);
         }
-
-        current = current->next;
     }
+    while (swapped);
 
     printf("\nComplaints sorted by priority successfully!\n");
 }
+
 
 /* Automatically assign complaint priority */
 
