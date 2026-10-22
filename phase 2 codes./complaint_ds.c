@@ -265,9 +265,6 @@ void loadComplaints(ComplaintNode** head)
 
     fclose(file);
 }
-
-/* Register a new complaint */
-
 /* Register a new complaint */
 void addComplaint(ComplaintNode** head)
 {
