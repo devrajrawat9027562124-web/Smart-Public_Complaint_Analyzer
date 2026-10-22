@@ -1,213 +1,543 @@
 # Smart Public Complaint Analyzer
 
-Smart Public Complaint Analyzer is a small complaint-management project with two separate interfaces:
+A complaint management system where citizens register public problems (potholes, water leaks, exposed wires, garbage, …), the system **automatically assigns a priority** from the complaint text, and an admin tracks, assigns and resolves complaints, highest priority first.
 
-1. A native C/C++ console application for registering and managing complaints.
-2. A static HTML, CSS, and JavaScript website that demonstrates a browser-based complaint workflow.
+The core is a **C data layer** (linked list, priority queue, file handling) driven by a **C++ console application** (classes, inheritance, runtime polymorphism). A separate **HTML/CSS/JavaScript web prototype** demonstrates the same workflow in the browser.
 
-The console application and website do **not** share a database or synchronize their records. The console program stores its records in text files, while the website stores its records in the browser's `localStorage`.
+| | |
+|---|---|
+| **Program** | Project-Based Learning (PBL), Phase-II |
+| **Team ID** | DSCPP-III-2026-T031 |
+| **Courses covered** | Data Structures in C · Object-Oriented Programming with C++ |
+| **Department** | Computer Science & Engineering, Graphic Era (Deemed to be University), Dehradun |
+| **Semester / Session** | 3rd semester, 2026-27 |
+| **Mentor** | Dr. Prabhdeep Singh |
 
-## Contents
+---
 
-- [Capabilities](#capabilities)
-- [Technologies and design](#technologies-and-design)
-- [Console application workflow](#console-application-workflow)
-- [Priority assignment](#priority-assignment)
-- [Files and persistence](#files-and-persistence)
-- [Build and run the console application](#build-and-run-the-console-application)
-- [Use the website](#use-the-website)
-- [Project structure](#project-structure)
-- [Current limitations](#current-limitations)
+## Table of Contents
 
-## Capabilities
+1. [Problem Statement](#problem-statement)
+2. [Objectives](#objectives)
+3. [Features](#features)
+4. [Tech Stack](#tech-stack)
+5. [Course Concepts Implemented](#course-concepts-implemented)
+6. [System Architecture](#system-architecture)
+7. [Data Structures](#data-structures)
+8. [Automatic Priority Assignment](#automatic-priority-assignment)
+9. [Project Structure](#project-structure)
+10. [Getting Started](#getting-started)
+11. [Usage Guide](#usage-guide)
+12. [Data File Formats](#data-file-formats)
+13. [Function Reference](#function-reference)
+14. [Testing](#testing)
+15. [Known Issues & Limitations](#known-issues--limitations)
+16. [Project Status](#project-status)
+17. [Roadmap (Phase-III)](#roadmap-phase-iii)
+18. [Team & Contributions](#team--contributions)
+19. [References](#references)
+20. [License](#license)
 
-### Console application
+---
 
-The console interface has two roles selected from the main menu:
+## Problem Statement
 
-**Citizen**
+Public complaint management often suffers from delays in **tracking**, **prioritization** and **department assignment**. Complaints are handled in arrival order instead of urgency, citizens cannot easily see what happened to their complaint, and administrators have no single view of pending work.
 
-- Register a complaint by entering an ID, name, category, description, and location.
-- View all saved complaints.
-- Search for a complaint by ID.
+This project provides a centralized system that simplifies complaint registration, tracking, status updates and management.
 
-**Admin**
+## Objectives
 
-- View all complaints.
-- Change a complaint's status to Pending, In Progress, or Resolved.
-- Assign a department and an employee.
-- View the priority queue.
-- Run the priority-related sort operation.
-- View counts of total, pending, in-progress, and resolved complaints.
-- Filter complaints by status or category.
+1. Let citizens easily raise complaints and track their status.
+2. Process, prioritize, sort, search and route complaints using C.
+3. Apply **Data Structures in C** and **Object-Oriented Programming in C++** to a real problem.
+4. Provide transparency and monitoring through an admin dashboard.
 
-New console complaints begin with Pending status and Not Assigned department and employee values. Their priority is assigned from the description and, in some cases, the category.
+---
 
-### Static website
+## Features
 
-The website contains a home page, a complaint registration form, a tracking page, and an admin page. In the browser, it can register and track complaints, search and sort the displayed records, update a record's department and status, and delete a record.
+### Console application (C + C++)
 
-## Technologies and design
+**Citizen menu**
+- **Register a complaint**: name, category, description and location.
+  - Complaint ID is **generated automatically** (highest existing ID + 1).
+  - Priority (**High / Medium / Low**) is **assigned automatically** from the description (see [Automatic Priority Assignment](#automatic-priority-assignment)).
+  - New complaints start as `Pending`, with department and employee `Not Assigned`.
+- **View all complaints**.
+- **Search a complaint by ID** to check its status.
 
-### C and C++
+**Admin menu**
+- **View all complaints**.
+- **Update status** (`Pending` / `In Progress` / `Resolved`). Every status change is logged with a timestamp in `status_history.txt`.
+- **Assign a department** and **assign an employee** to a complaint.
+- **View the priority queue**: complaints ordered High → Medium → Low; equal priorities are served first-come, first-served.
+- **Sort complaints by priority** (see [Known Issues](#known-issues--limitations) before using).
+- **Dashboard / statistics**: total, pending, in-progress and resolved counts.
+- **Filter complaints** by status or by category.
 
-The console program uses both languages:
+**System behaviour**
+- All data is **saved to `complaints.txt` after every change** and reloaded on start-up; the priority queue is rebuilt from the loaded data.
+- Non-numeric menu input is rejected without crashing (`cin.clear()` + `cin.ignore()`).
+- All dynamically allocated memory (list and queue nodes) is freed on exit.
 
-- `main.cpp` implements the application entry point and the Citizen and Admin menus using C++ console input/output.
-- `complaint_ds.c` implements complaint operations, file handling, priority assignment, and linked-list processing in C.
-- `complaint_ds.h` defines the C structures and declares the functions that the C++ menu calls.
-- The header wraps its declarations in `extern "C"` when included by C++. This gives the C functions C-compatible linkage, allowing the C++ program to link to implementations compiled as C.
-- `Complaint.h` defines a C++ `Complaint` class. The current console data-management routines use the `ComplaintNode` C structure rather than this class.
+### Web prototype (`website/`)
 
-The console program uses standard C/C++ facilities: `stdio.h` for text-file and formatted input/output operations, `stdlib.h` for dynamic allocation, `string.h` for string operations, `ctype.h` for lowercase conversion, `time.h` for status-change timestamps, and C++ `iostream` for menus and prompts. It does not require an external database or third-party library.
+| Page | What it does |
+|---|---|
+| `index.html` | Home page, how it works, complaint categories |
+| `register.html` | Register a complaint (citizen ID, name, category, location, description). Shows the generated ID (starting at **1001**) and the priority |
+| `track.html` | Look up a complaint by its numeric ID |
+| `admin.html` | Search by ID / citizen ID / name / category / location / description, sort by newest or priority, change department and status, delete complaints |
 
-### Data structures
+- **Duplicate detection**: a new complaint with the same category, location and description (ignoring case and extra spaces) as an existing one is rejected, and the existing ID is shown.
+- User text is rendered with `textContent`, never `innerHTML`, so typed input cannot inject HTML or scripts.
+- Data is stored in the browser's `localStorage`.
 
-Each console complaint is represented by a `ComplaintNode` structure. It holds:
+> **Note:** The web prototype is **standalone**. It does not talk to the C/C++ program; the two keep separate data and use different priority rules. Connecting them is planned for Phase-III.
 
-- An integer complaint ID.
-- Fixed-size character arrays for the citizen name, category, description, location, priority, status, department, and employee.
-- An integer priority value: 3 for High, 2 for Medium, or 1 for Low.
-- A pointer to the next complaint.
+---
 
-The `head` pointer in `main.cpp` is the start of a singly linked list of complaints. Loading and registration append complaint nodes to this list. Display, search, filtering, and statistics walk the list from beginning to end.
+## Tech Stack
 
-The priority queue is a second linked list. Each `PriorityNode` points to a complaint node and to the next priority-queue entry. The insertion function orders queue entries by descending numeric priority, so higher values appear first. The queue refers to the complaint nodes; it does not make duplicate complaint records.
+| Layer | Technology |
+|---|---|
+| Core data layer | C (C99 standard library: `stdio`, `stdlib`, `string`, `ctype`, `time`) |
+| Application layer | C++11 (`iostream`, `string`, `limits`) |
+| Storage | Plain text files (file handling) |
+| Web prototype | HTML5, CSS3, vanilla JavaScript, browser `localStorage` |
+| Compilers | GCC / G++ (MinGW on Windows), Clang on macOS |
+| Editor | Visual Studio Code |
+| Version control | Git / GitHub |
 
-The website uses JavaScript objects and arrays instead of these C structures. Its records are serialized to JSON for storage in `localStorage`.
+---
 
-## Console application workflow
+## Course Concepts Implemented
 
-1. On startup, `main()` calls `loadComplaints()` to read `complaints.txt` into the complaint linked list.
-2. It visits the loaded complaints and inserts them into the priority queue.
-3. The main menu lets the user open the Citizen menu, open the Admin menu, or exit.
-4. Registering a complaint allocates and fills a new node, assigns a priority, initializes its status and assignments, appends it to the list, and saves the complaint list.
-5. The Citizen/Admin actions traverse or update the in-memory list. Status and assignment changes are saved back to the text file.
-6. When a status changes, a history entry is appended to `status_history.txt`.
+### Data Structures in C
 
-The menus are text-based and expect the user to enter the numeric choice shown. Run the program from its project directory so its relative data-file paths point to the intended `complaints.txt` and `status_history.txt`.
+| Concept | Where | How it is used |
+|---|---|---|
+| Structures | `ComplaintNode`, `PriorityNode` in `complaint_ds.h` | Group the 10 fields of a complaint into one record |
+| Singly linked list | `ComplaintNode*` list in `complaint_ds.c` | Main store of all complaints; grows dynamically |
+| Priority queue | `insertPriorityQueue()` | Sorted linked list of pointers, highest priority at the front |
+| Arrays | `highKeywords[]`, `mediumKeywords[]`, `lowKeywords[]` | Keyword tables for priority detection |
+| Dynamic memory | `malloc()` / `free()` | Every list and queue node is allocated at run time and freed on exit |
+| Pointer to pointer | `addComplaint(ComplaintNode** head)` | Lets a function change the caller's `head` when the list is empty |
+| Searching | `searchComplaint()`, `updateStatus()` | Linear search by complaint ID |
+| Sorting | `sortComplaintsByPriority()` | Exchange-based sort on priority |
+| File handling | `saveComplaints()`, `loadComplaints()`, `saveStatusHistory()` | Persistent storage and an append-only audit log |
 
-### How the Admin operations work
+### Object-Oriented Programming with C++
 
-- **Update status:** Finds the first complaint with the entered ID, records the old and new statuses in the history file, changes the in-memory status, then saves all complaints.
-- **Assign department / employee:** Finds a complaint by ID, updates the selected text field, then saves all complaints.
-- **View priority queue:** Traverses and prints queue entries in queue order.
-- **Sort complaints by priority:** Compares priority values in the complaint list and swaps priority values and labels between nodes. It does not reorder the complaint nodes themselves.
-- **Dashboard:** Traverses the list and counts records whose status exactly matches Pending, In Progress, or Resolved.
-- **Filter:** Traverses the list and prints complaints whose status or category exactly matches the selected value.
+| Concept | Where | How it is used |
+|---|---|---|
+| Class & encapsulation | `Complaint` in `Complaint.h` | Private data members, public getters and a setter |
+| Constructor with initializer list | `Complaint::Complaint(...)` | Builds a complaint object from the registered data |
+| Abstraction | `User` in `main.cpp` | Abstract base class with pure virtual `displayMenu()` |
+| Inheritance | `Citizen : public User`, `Admin : public User` | Each role provides its own menu |
+| Runtime polymorphism | `User* currentUser` in `main()` | The same call `currentUser->displayMenu()` opens a different menu depending on the object |
+| Virtual destructor | `virtual ~User()` | Safe destruction through a base-class pointer |
+| C/C++ interoperability | `extern "C" { #include "complaint_ds.h" }` | C++ code calls the C data layer without name-mangling problems |
+| Input validation | All menus in `main.cpp` | Recover from invalid (non-numeric) input |
 
-## Priority assignment
+---
 
-The console's `assignPriority()` function checks the complaint description against three built-in keyword lists. Matching is case-insensitive: the text is first converted to lowercase, then searched for each keyword.
+## System Architecture
 
-The checks run in this order:
-
-1. If any High-priority keyword is found, assign High (3).
-2. Otherwise, if any Medium-priority keyword is found, assign Medium (2).
-3. Otherwise, if any Low-priority keyword is found, assign Low (1).
-4. Otherwise, if the category is Road, Water, or Garbage (case-insensitive), assign Medium (2).
-5. For any other unmatched description/category, assign Low (1).
-
-The keyword lists are maintained in `complaint_ds.c`. Examples include fire, gas leak, exposed wire, or collapse for High; pothole, blocked drain, or water shortage for Medium; and peeling paint or minor litter for Low. Since High checks happen first, a description matching both High and Medium keywords receives High.
-
-The website has a separate, simpler JavaScript priority function. It checks a smaller set of words in the combined category and description text and returns High, Medium, or Low. Its rules are not the same as the console application's rules.
-
-## Files and persistence
-
-### Console data files
-
-`complaints.txt` stores one complaint per line as ten pipe-separated fields:
-
-```text
-id|citizen name|category|description|location|priority|priority value|status|department|employee
+```mermaid
+flowchart LR
+    U([Citizen / Admin]) --> M["main.cpp<br/>Main menu"]
+    M -->|"User* points to Citizen"| C["Citizen menu"]
+    M -->|"User* points to Admin"| A["Admin menu"]
+    C --> DS["complaint_ds.c<br/>C data layer"]
+    A --> DS
+    DS --> LL[("Linked list<br/>all complaints")]
+    DS --> PQ[("Priority queue<br/>High to Low")]
+    DS <-->|"save / load"| F1[/"complaints.txt"/]
+    DS -->|"append"| F2[/"status_history.txt"/]
 ```
 
-For example:
+**Complaint lifecycle**
 
-```text
-123|Asha Rao|Road|Pothole near the market|Main Street|Medium|2|Pending|Not Assigned|Not Assigned
+```
+Register ──► Auto ID + auto priority ──► Pending ──► Department / employee assigned
+                                            │
+                                            ▼
+                                       In Progress ──► Resolved
+            (every status change is written to status_history.txt)
 ```
 
-The loader expects all ten fields. Keep the pipe character (`|`) out of entered field values because it is the delimiter. The application rewrites this file when saving, so keep a backup before making manual edits.
+**Web prototype (separate)**
 
-`status_history.txt` is an append-only log for status changes. Each entry includes the complaint ID, previous status, new status, and local date/time. A change to department or employee does not create a status-history entry.
-
-These files are opened using paths relative to the program's current working directory. If the program is launched from another directory, it may create or look for data files there instead of in the project folder.
-
-### Website data
-
-The website keeps complaint records and the next complaint ID in browser `localStorage`, using the keys `spca_complaints_v2` and `spca_next_complaint_id_v2`. Its data is local to that browser storage context. Clearing browser data or using another browser/profile can make those records unavailable.
-
-There is no server or database connecting the website to the C/C++ application. Updating a complaint in one interface does not update the other interface's data.
-
-## Build and run the console application
-
-### Requirements
-
-- Windows
-- MinGW-w64 (or another toolchain that provides `gcc` and `g++`) available on `PATH`
-
-Open PowerShell in the project directory and build the C module, then link it with the C++ application:
-
-```powershell
-$object = Join-Path $env:TEMP 'complaint_ds_windows.o'
-gcc -std=c11 -Wall -Wextra -c .\complaint_ds.c -o $object
-if ($LASTEXITCODE -ne 0) { throw 'C compilation failed.' }
-
-g++ -std=c++17 -Wall -Wextra .\main.cpp $object -o .\complaint_analyzer.exe
-if ($LASTEXITCODE -ne 0) { throw 'C++ build failed.' }
-
-Remove-Item -LiteralPath $object
+```mermaid
+flowchart LR
+    B([Browser]) --> R[register.html] & T[track.html] & AD[admin.html]
+    R & T & AD --> JS[script.js] --> LS[("localStorage")]
 ```
 
-The first command compiles `complaint_ds.c` as C into a temporary object file. The second compiles `main.cpp` as C++ and links it with that object to create `complaint_analyzer.exe`. The temporary object is removed after a successful build.
+---
 
-Run the program from the same project directory:
+## Data Structures
 
-```powershell
-.\complaint_analyzer.exe
+```
+head ──────────► [ #1 ] ──► [ #2 ] ──► [ #3 ] ──► NULL     linked list: owns the data, registration order
+                    ▲          ▲          ▲
+                    │          │          │
+priorityFront ──► [ P ] ───► [ P ] ───► [ P ] ──► NULL     priority queue: pointers only, High → Low
 ```
 
-The executable can be rebuilt by repeating the build commands after changing either source file.
+The priority queue **stores pointers** to the complaints in the linked list instead of copies, so a status update is visible in both structures at once. (In practice the two orders differ: the list keeps registration order, while the queue is ordered by priority.)
 
-## Use the website
+### `ComplaintNode` (one complaint)
 
-Open `website/index.html` in a modern web browser. The website is static and does not need a build step or package installation.
+| Field | Type | Description |
+|---|---|---|
+| `complaintID` | `int` | Unique, auto-generated |
+| `citizenName` | `char[100]` | Name of the citizen |
+| `category` | `char[50]` | Road / Water / Electricity / Garbage / Other |
+| `description` | `char[200]` | Problem description (used for priority detection) |
+| `location` | `char[100]` | Where the problem is |
+| `priority` | `char[20]` | `High` / `Medium` / `Low` (for display) |
+| `priorityValue` | `int` | `3` / `2` / `1` (for comparisons) |
+| `status` | `char[20]` | `Pending` / `In Progress` / `Resolved` |
+| `department` | `char[50]` | Assigned department, default `Not Assigned` |
+| `employee` | `char[50]` | Assigned employee, default `Not Assigned` |
+| `next` | `ComplaintNode*` | Next complaint in the list |
 
-- **Home (`index.html`):** Introduction and navigation to registration and tracking.
-- **Register (`register.html`):** Collects citizen ID, name, category, location, and description. JavaScript validates required fields, checks for a matching category/location/description duplicate, assigns the next numeric ID, calculates priority, and stores the record in browser storage.
-- **Track (`track.html`):** Looks up a complaint by its numeric ID in the browser's stored records and displays its details.
-- **Admin (`admin.html`):** Displays stored complaints; allows text search and sorting by newest ID or priority; provides controls to update department/status or delete a complaint.
-- **Styles (`style.css`):** Controls the visual layout and styling of the website pages.
-- **Behavior (`script.js`):** Handles form submission, browser storage, priority calculation, tracking, filtering/search, sorting, and admin updates.
+### `PriorityNode` (one queue entry)
 
-The website has no authentication or server-side access control. Its Admin page is a demonstration interface, not a protected production admin system. Website deletion only removes a record from that browser's stored array; there is no server copy.
+| Field | Type | Description |
+|---|---|---|
+| `complaint` | `ComplaintNode*` | Points to a complaint in the linked list |
+| `next` | `PriorityNode*` | Next entry (equal or lower priority) |
 
-## Project structure
+---
 
-```text
-Smart-Public-Complaint-Analyzer 2/
-|-- Complaint.h             C++ Complaint class declaration
-|-- complaint_ds.c          C implementation of complaint operations
-|-- complaint_ds.h          C structures and function declarations
-|-- complaints.txt          Console application's complaint records
-|-- main.cpp                Console menus and application entry point
-|-- status_history.txt      Console status-change log
-|-- README.md               Project documentation
-`-- website/
-    |-- admin.html          Browser-based admin interface
-    |-- index.html          Website home page
-    |-- register.html       Browser complaint registration form
-    |-- script.js           Website behavior and localStorage handling
-    |-- style.css           Website styling
-    `-- track.html          Browser complaint tracking page
+## Automatic Priority Assignment
+
+`assignPriority()` lowercases the description and checks keyword tables **in order**. The first match decides:
+
+| Step | Rule | Result | Keywords | Examples |
+|---|---|---|---|---|
+| 1 | Description contains a **high** keyword | **High** (3) | 97 | fire, gas leak, exposed wire, building collapse, open manhole, flood |
+| 2 | …else a **medium** keyword | **Medium** (2) | 100 | pothole, blocked drain, pipe leak, broken streetlight, garbage pile |
+| 3 | …else a **low** keyword | **Low** (1) | 75 | faded paint, hairline crack, squeaky swing, torn poster |
+| 4 | …else category is `road`, `water` or `garbage` | **Medium** (2) | n/a | fallback for unmatched civic problems |
+| 5 | …otherwise | **Low** (1) | n/a | default |
+
+Because High is checked first, a safety hazard is never ranked below a routine issue.
+
+The web prototype uses a smaller rule set in `script.js` (`calculatePriority()`): 8 high words, 6 medium words, everything else Low.
+
+---
+
+## Project Structure
+
+```
+phase 2 pbl/
+├── main.cpp               # C++ application: User/Citizen/Admin classes, menus, main()
+├── Complaint.h            # C++ Complaint class (encapsulation demo)
+├── complaint_ds.h         # C structures + function declarations
+├── complaint_ds.c         # C data layer: linked list, priority queue, priority rules, file I/O
+├── complaints.txt         # Saved complaints (created/updated by the program)
+├── status_history.txt     # Status-change audit log (appended by the program)
+├── website/
+│   ├── index.html         # Home page
+│   ├── register.html      # Complaint registration form
+│   ├── track.html         # Track complaint by ID
+│   ├── admin.html         # Admin panel
+│   ├── script.js          # All web logic (localStorage, priority, duplicates, admin)
+│   └── style.css          # Shared, responsive styling
+├── .vscode/               # Editor configuration
+└── README.md
 ```
 
-## Current limitations
+**Generated files** (safe to delete, should not be committed): `*.o`, `*.exe`, `main`, `main_debug`, `*.dSYM/`, `.DS_Store`.
 
-- The console application is a local, single-user program; it has no login, network service, or shared database.
-- Complaint IDs are supplied manually in the console, and the program does not enforce ID uniqueness. Searching by a duplicated ID returns the first matching record.
-- The console file format is delimiter-based rather than escaped or database-backed. A pipe in a field can prevent a line from loading correctly.
-- Console priority classification is a keyword heuristic, not an external analysis or machine-learning service. Unrecognized descriptions fall back to category rules or Low priority.
-- The console's priority sort operation swaps priority labels/values but leaves complaint-list order unchanged.
-- The website has separate browser-local data, simpler priority rules, and no authentication. It is not connected to the console records.
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Windows:** MinGW (`gcc` and `g++`) on your `PATH`
+- **macOS:** Xcode Command Line Tools (`xcode-select --install`)
+- **Linux (Debian/Ubuntu):** `sudo apt install build-essential`
+- Any modern browser for the web prototype
+
+### Build
+
+The program has two source files that must be compiled separately and then linked: C code with a C compiler, C++ code with a C++ compiler.
+
+**Windows (MinGW)**
+
+```bash
+gcc -c complaint_ds.c -o complaint_ds.o
+g++ main.cpp complaint_ds.o -o SmartPublicComplaintAnalyzer.exe
+```
+
+**macOS / Linux**
+
+```bash
+gcc -c complaint_ds.c -o complaint_ds.o
+g++ main.cpp complaint_ds.o -o SmartPublicComplaintAnalyzer
+```
+
+> Building only `main.cpp` (for example, VS Code's default *"build active file"* task) fails with *undefined reference* linker errors, because the functions live in `complaint_ds.c`. Use the two commands above.
+
+### Run
+
+Run the program **from the project folder**. It reads and writes `complaints.txt` and `status_history.txt` in the current directory; started from anywhere else, it begins with an empty list.
+
+```bash
+# Windows
+SmartPublicComplaintAnalyzer.exe
+
+# macOS / Linux
+./SmartPublicComplaintAnalyzer
+```
+
+### Open the web prototype
+
+Open `website/index.html` in a browser. No server or installation is needed.
+
+---
+
+## Usage Guide
+
+### Menu reference
+
+```
+Main menu            Citizen menu                Admin menu
+1. Citizen           1. Register Complaint       1. View All Complaints
+2. Admin             2. View All Complaints      2. Update Complaint Status
+3. Exit              3. Search Complaint         3. Assign Department
+                     4. Back to Main Menu        4. Assign Employee
+                                                 5. View Priority Queue
+                                                 6. Sort Complaints by Priority
+                                                 7. Dashboard / Statistics
+                                                 8. Filter Complaints (by status / category)
+                                                 9. Back to Main Menu
+```
+
+### Sample session
+
+Captured from a real run starting with an empty data folder. User input is shown after each prompt; repeated menus are trimmed (`...`).
+
+```
+====================================
+ SMART PUBLIC COMPLAINT ANALYZER
+====================================
+1. Citizen
+2. Admin
+3. Exit
+Enter your choice: 1
+...
+Enter your choice: 1
+System Assigned Complaint ID: 1
+Enter Citizen Name: Aarav Sharma
+Enter Category (Road/Water/Electricity/Garbage/Other): Road
+Enter Description: Big pothole near the bus stop
+Enter Location: Rajpur Road, Dehradun
+
+System Assigned Priority: Medium
+
+Complaint registered successfully!
+Complaint ID: 1
+Status: Pending
+Department: Not Assigned
+
+Complaint details confirmed.
+Complaint ID: 1
+Priority: Medium
+Status: Pending
+...
+========== ADMIN MENU ==========
+...
+Enter your choice: 2
+Enter Complaint ID: 1
+Enter new status (Pending/In Progress/Resolved): In Progress
+
+Complaint status updated successfully!
+Old Status: Pending
+New Status: In Progress
+...
+Enter your choice: 7
+
+===== ADMIN DASHBOARD =====
+Total Complaints : 1
+Pending          : 0
+In Progress      : 1
+Resolved         : 0
+===========================
+```
+
+---
+
+## Data File Formats
+
+### `complaints.txt`
+
+One complaint per line, ten fields separated by `|`:
+
+```
+ID|Name|Category|Description|Location|Priority|PriorityValue|Status|Department|Employee
+```
+
+Example (written by the sample session above):
+
+```
+1|Aarav Sharma|Road|Big pothole near the bus stop|Rajpur Road, Dehradun|Medium|2|In Progress|Not Assigned|Not Assigned
+```
+
+The file is **rewritten completely** after every change (`"w"` mode).
+
+### `status_history.txt`
+
+An append-only audit log (`"a"` mode), one line per status change:
+
+```
+ID: 1 | Old: Pending | New: In Progress | Date: 2026-10-22 08:09:36
+```
+
+### Web prototype (`localStorage`)
+
+| Key | Contents |
+|---|---|
+| `spca_complaints_v2` | JSON array of complaint objects (`id`, `citizenId`, `name`, `category`, `location`, `description`, `priority`, `department`, `status`, `date`) |
+| `spca_next_complaint_id_v2` | Next complaint ID to hand out (starts at 1001) |
+
+Data lives only in the browser that created it. Clearing site data deletes it.
+
+---
+
+## Function Reference
+
+All functions are declared in `complaint_ds.h` and implemented in `complaint_ds.c`. *n* = number of complaints.
+
+| Function | Purpose | Time |
+|---|---|---|
+| `addComplaint(ComplaintNode** head)` | Read input, generate ID, assign priority, append to list, save | O(n) |
+| `displayComplaints(ComplaintNode* head)` | Print every complaint | O(n) |
+| `searchComplaint(ComplaintNode* head, int id)` | Find and print one complaint | O(n) |
+| `updateStatus(head, id, newStatus)` | Change status, log it, save | O(n) |
+| `assignDepartment(head, id, newDepartment)` | Set department, save | O(n) |
+| `assignEmployee(head, id, newEmployee)` | Set employee, save | O(n) |
+| `insertPriorityQueue(PriorityNode** front, ComplaintNode* c)` | Sorted insert, stable for equal priorities | O(n) |
+| `displayPriorityQueue(PriorityNode* front)` | Print queue from highest priority | O(n) |
+| `sortComplaintsByPriority(ComplaintNode* head)` | Exchange sort by priority | O(n²) |
+| `assignPriority(ComplaintNode* c)` | Keyword-based priority detection | O(k), k = keyword count |
+| `saveComplaints(ComplaintNode* head)` | Write all complaints to file | O(n) |
+| `loadComplaints(ComplaintNode** head)` | Read complaints from file | O(n²)* |
+| `saveStatusHistory(id, oldStatus, newStatus)` | Append a timestamped log line | O(1) |
+| `displayComplaintStatistics(ComplaintNode* head)` | Count by status | O(n) |
+| `filterComplaintsByStatus(head, status)` | Print complaints with a given status | O(n) |
+| `filterComplaintsByCategory(head, category)` | Print complaints in a given category | O(n) |
+
+\* Each loaded line walks to the end of the list. Keeping a tail pointer would make this O(n).
+
+Internal helpers (not in the header): `makeLowercase()` and `containsKeyword()`. `clearPriorityQueue()` is in `main.cpp`.
+
+---
+
+## Testing
+
+### Phase-II results
+
+| Module | Expected result | Observed result | Status |
+|---|---|---|---|
+| Registering complaints | Generation of complaint ID | ID generated successfully | ✅ Pass |
+| Complaint tracking | Display of IDs | Successfully displayed | ✅ Pass |
+| Status updation | Status updated | Success | ✅ Pass |
+
+### Manual test checklist
+
+- [ ] Register complaints with a high, a medium and a low keyword; check the assigned priority
+- [ ] Restart the program; all complaints are reloaded
+- [ ] Search for an existing ID and a non-existing ID
+- [ ] Update a status; a line appears in `status_history.txt`
+- [ ] Set a status to the value it already has; the message "Complaint already has this status" is shown
+- [ ] Assign a department and an employee; both survive a restart
+- [ ] View the priority queue; High comes before Medium before Low, and equal priorities keep their registration order
+- [ ] Type letters at a menu prompt; the program recovers
+- [ ] Check the dashboard counts against `complaints.txt`
+- [ ] Filter by status and by category
+
+---
+
+## Known Issues & Limitations
+
+### Bugs
+
+| # | Issue | Effect | Suggested fix |
+|---|---|---|---|
+| 1 | `sortComplaintsByPriority()` swaps only the `priority` and `priorityValue` fields, not the whole complaint | Admin option 6 attaches priorities to the **wrong complaints** (e.g. "faded paint" becomes Medium and "pothole" becomes Low), and the next save writes this to disk | Swap all data fields except `next`, or relink the nodes. **Avoid option 6 until fixed**; option 5 already shows complaints in priority order |
+| 2 | Typo `"landsklide"` in `highKeywords` | A plain "landslide" is not detected as High | Change it to `"landslide"` |
+| 3 | An empty field, or a `\|` typed inside a field, breaks the line format | That complaint is **silently skipped** on the next load | Reject empty input and `\|` characters at registration |
+| 4 | Input longer than a field's buffer (e.g. a 250-character description) | The extra characters are read as the answer to the next prompt | Discard the rest of the line after `fgets` |
+
+### Limitations
+
+- **Keyword matching is substring-based**: "firewood stall" contains "fire" and is rated High; negations such as "no fire" are not understood.
+- **Category and status filters are case-sensitive**: filtering by `Road` does not show complaints saved as `road`.
+- **Status is free text** in the console app: a value like `resolved` or `Done` is counted in the total but not in any dashboard bucket.
+- **No duplicate detection** in the console app (only the web prototype has it).
+- **No admin authentication**: anyone can open the admin menu or admin page.
+- **No delete option** in the console app.
+- Priorities saved in `complaints.txt` are **not recalculated** on load, so complaints saved by older versions of the rules keep their old priority.
+- The **web prototype is not connected** to the C/C++ program (see [Features](#web-prototype-website)).
+- In the web prototype, `"overflow"` is a High word, so `"overflowing"` matches High before the Medium list is checked.
+
+---
+
+## Project Status
+
+As reported at the Phase-II evaluation (overall completion **66%**):
+
+| Module | Status | Work completed |
+|---|---|---|
+| Complaint registration | ✅ Completed | Complaint ID generation |
+| Complaint tracking | ✅ Completed | Searching by ID |
+| Status and assignment | 🔄 In progress | Improving status |
+| Duplicate detection | ⏳ Pending | Duplicate identification |
+
+In the current code, the console app has status updates, department and employee assignment, and automatic priority. Duplicate detection exists only in the web prototype.
+
+## Roadmap (Phase-III)
+
+1. Complete the pending features.
+2. **Integrate all modules into one system**, connecting the website to the C/C++ back end.
+3. Test all features and fix errors, including the [known issues](#known-issues--limitations).
+4. Create a fully working website.
+5. Handle **duplicate complaints** in the core program.
+
+---
+
+## Team & Contributions
+
+| Member | Role | Contribution |
+|---|---|---|
+| **Devraj Singh Rawat** | Lead | C module development, data structures |
+| **Stuti Mahajan** | Developer | C module development, data structures |
+| **Archi Panwar** | Web developer | Website and testing |
+| **Rajat** | Developer | C++ module development (`main.cpp`) |
+
+**Mentor:** Dr. Prabhdeep Singh
+
+Department of Computer Science & Engineering, Graphic Era (Deemed to be University), Dehradun
+
+---
+
+## References
+
+1. Data Structures and Algorithms: C Programming
+2. C++ Programming Documentation
+3. GeeksforGeeks: Linked Lists and Priority Queues
+4. MDN Web Docs: HTML, CSS and JavaScript
+
+---
+
+## License
+
+This project was created for academic purposes as part of the Project-Based Learning program at Graphic Era (Deemed to be University). No open-source license has been chosen yet.
