@@ -42,18 +42,14 @@ void assignEmployee(ComplaintNode* head, int id,const char newEmployee[]);
 
 /* Priority queue functions */
 void insertPriorityQueue(PriorityNode** front,ComplaintNode* complaint);
-
 void displayPriorityQueue(PriorityNode* front);
 void sortComplaintsByPriority(ComplaintNode* head);
-
 /* Priority calculation */
 void assignPriority(ComplaintNode* complaint);
-
 /* File handling */
 void saveComplaints(ComplaintNode* head);
 void loadComplaints(ComplaintNode** head);
 void saveStatusHistory(int complaintID,const char oldStatus[],const char newStatus[]);
-
 /* Statistics and filters */
 void displayComplaintStatistics(ComplaintNode* head);
 
