@@ -3,7 +3,7 @@
  * Duplicate complaint detection using Levenshtein distance and Jaccard similarity.
  * Space-optimized Levenshtein using only two rows.
  *
- * SMART DUPLICATE LOGIC (solves the "AC not working" vs "Fan not working" problem):
+ * SMART DUPLICATE LOGIC (solves the "AC not working" vs "Fan not working" problem)
  *
  *   1. STOP-WORD FILTERING: Generic words ("not", "working", "problem", "please",
  *      "issue", "area", "colony") are excluded from Jaccard similarity so only
