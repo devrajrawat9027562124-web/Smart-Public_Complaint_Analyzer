@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
 /* ─── djb2 Hash Function ─── */
 unsigned long ht_hash(const char* key, int table_size) {
     unsigned long hash = 5381;
