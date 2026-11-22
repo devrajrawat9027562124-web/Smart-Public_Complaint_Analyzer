@@ -1,4 +1,4 @@
-/*
+/
  * duplicate_detector.c
  * Duplicate complaint detection using Levenshtein distance and Jaccard similarity.
  * Space-optimized Levenshtein using only two rows.
