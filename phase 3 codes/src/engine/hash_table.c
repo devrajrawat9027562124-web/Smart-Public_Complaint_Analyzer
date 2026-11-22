@@ -2,7 +2,6 @@
  * hash_table.c
  * Hash table implementation with djb2 hashing and separate chaining.
  */
-
 #include "../../include/engine/hash_table.h"
 #include <stdlib.h>
 #include <string.h>
