@@ -4,7 +4,7 @@
  * All structs, typedefs, and macro constants are defined here.
  */
 
-#ifndef COMPLAINT_TYPES_H
+#ifndef COMPLAINT_TYPES_
 #define COMPLAINT_TYPES_H
 
 /* ─── Configuration Constants ─── */
