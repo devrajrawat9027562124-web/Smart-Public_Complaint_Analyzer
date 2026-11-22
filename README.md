@@ -1,223 +1,267 @@
 # Smart Public Complaint Analyzer
 
-**Documentation reviewed:** 2026-10-16
+**Team CivicSync (DSCPP-III-2026-T031)**: B.Tech 3rd-semester project-based learning (Data Structures with C and Object-Oriented Programming with C++), Graphic Era.
 
-Smart Public Complaint Analyzer is a console-based C/C++ application for submitting and managing civic complaints. It uses a C engine for file storage, text analysis, duplicate detection, complaint prioritization, and route calculation, with a C++ interface for sign-in and role-specific menus.
+**README updated:** 2026-11-22
 
-## About the topic
+Smart Public Complaint Analyzer lets residents of Dehradun report civic problems, such as water outages, broken roads and garbage, and helps the city staff deal with them. A **C engine** estimates how severe each complaint is, suggests a category, flags spam and duplicates, orders pending complaints in a max-heap, and plans a worker's route with Dijkstra's algorithm. A **C++ console app** with role-based menus uses that engine. A **website** also uses it, through a small command-line bridge, and reads the same data files.
 
-Public complaint analysis is the process of collecting reports from residents about local issues, such as water outages, unsafe roads, or sanitation problems, and organizing them so the responsible teams can respond. When many complaints arrive, staff may have difficulty spotting urgent cases, recognizing repeated reports about the same issue, and deciding which department should handle them.
-
-This project demonstrates how a civic complaint system can help residents submit and track issues while helping administrators and department staff review, prioritize, and assign work. Text-based severity and category suggestions, duplicate detection, complaint statistics, and worker route planning can make that workflow more organized and help staff focus attention on urgent or frequently reported problems. These features are decision-support aids: staff should review the results, and the application does not guarantee that a complaint will be resolved or that its analysis is correct.
+This README covers the whole project: the Phase I proposal, the Phase II prototype and the final Phase III system. The detailed technical documentation of the final code is in [`phase 3 codes/README.md`](phase%203%20codes/README.md).
 
 ## Contents
 
-- [About the topic](#about-the-topic)
-- [Capabilities](#capabilities)
-- [Roles](#roles)
-- [Technical design](#technical-design)
+- [Team](#team)
+- [The problem](#the-problem)
+- [Project journey](#project-journey)
+- [How the evaluators' feedback was addressed](#how-the-evaluators-feedback-was-addressed)
+- [Final system: features](#final-system-features)
+- [Architecture](#architecture)
+- [Concepts and technologies](#concepts-and-technologies)
+- [Repository layout](#repository-layout)
+- [Getting the code](#getting-the-code)
 - [Build and run](#build-and-run)
-- [Using the application](#using-the-application)
-- [Data files](#data-files)
-- [Dataset generator](#dataset-generator)
-- [Tests](#tests)
-- [Limits and security notes](#limits-and-security-notes)
-- [Project layout](#project-layout)
-- [History and dates](#history-and-dates)
+- [Testing and results](#testing-and-results)
+- [Known limitations](#known-limitations)
+- [Future work](#future-work)
+- [Timeline](#timeline)
 
-## Capabilities
+## Team
 
-- Register citizen accounts and authenticate users by username and password.
-- Submit complaints with a title, description, category, and Dehradun location.
-- Analyze complaint text with keyword-based rules to:
-  - estimate severity on a 1–10 scale, including negation and amplifier handling;
-  - suggest one of five complaint categories; and
-  - flag potentially irrelevant or spam-like submissions.
-- Compare new complaints with existing complaints to identify likely duplicates. Similarity uses Jaccard word overlap, normalized Levenshtein similarity, category, and location. Generic stop words and title subjects are considered to reduce false matches; the matching threshold varies with user and location.
-- Review pending complaints in descending severity order using a max-heap priority queue.
-- Assign complaints to departments and workers, track complaint status, and record completion.
-- View overall and department-level complaint statistics.
-- Calculate shortest paths through a built-in, weighted Dehradun road graph using Dijkstra's algorithm.
-- Persist users, departments, complaints, and activity logs in pipe-delimited text files.
-- Display a role-specific terminal interface with colored status and severity indicators.
+| Member | GitHub | Phase II work (from the Phase II report) | Phase III work |
+|---|---|---|---|
+| Devraj Rawat (team lead) | [devrajrawat9027562124-web](https://github.com/devrajrawat9027562124-web) | Complaint registration, linked-list storage, display and search | C engine: data types, file storage with the cross-process lock, max-heap priority queue, city graph and Dijkstra routing, `engine_cli` bridge, concurrency stress test |
+| Stuti Mahajan | [stutimahajan19-tech](https://github.com/stutimahajan19-tech) | Priority queue, priority sorting and priority handling; planned duplicate detection | C engine: hash table, NLP analyzer, duplicate detector, workflow rules, NLP evaluation, duplicate-detection test |
+| Rajat | [Rajat-2006](https://github.com/Rajat-2006) | Status updates, department and employee assignment, joining the C modules to the C++ application | C++ console app: `Person` class hierarchy, `AuthManager`, `Dashboard`, `MenuSystem`, `main.cpp` |
+| Archi Panwar | [Archi-717](https://github.com/Archi-717) | Website (HTML, CSS, JavaScript, browser storage), tracking page, admin dashboard; C++ module development | Website (`web/`): Python server, JSON API and single-page frontend. *Not uploaded to this repository yet.* |
 
-The category set is **Water Supply**, **Electricity**, **Roads & Transport**, **Sanitation**, and **Public Safety**. The complaint statuses represented in the application and sample data are `PENDING`, `REVIEWED`, `ASSIGNED`, `IN_PROGRESS`, and `COMPLETED`.
+Shared by the team: `Makefile`, the Phase III `README.md`, `generate_dataset.py` and `tools/repair_data.py`.
 
-## Roles
+## The problem
+
+City offices receive many complaints at once: a broken street light, a pothole, garbage that wasn't collected. When they are handled on paper or in arrival order:
+
+- urgent cases wait behind minor ones;
+- the same problem reported by several people is handled several times;
+- complaints reach the wrong department; and
+- citizens can't see what happened to their complaint.
+
+The project's goal is a single system that stores every complaint and ranks it by urgency. It detects repeats, routes each complaint to the right department and worker, and lets everyone follow its status. Along the way it uses C data structures and C++ object-oriented programming on a real problem.
+
+## Project journey
+
+### Phase I: proposal (September 2026)
+
+Documents: [`phase 1/phase1_report.pdf`](phase%201/phase1_report.pdf), [`phase 1/phase1_ppt.pdf`](phase%201/phase1_ppt.pdf)
+
+We proposed a modular design: **C as the data-structure engine** and **C++ as the object-oriented application layer**. The proposal planned:
+
+- arrays and linked lists for complaint records;
+- queues and priority queues for urgency;
+- hashing for department mapping;
+- BSTs for indexing;
+- graphs with BFS and DFS for routing and escalation; and
+- C++ classes for users, administrators, departments and employees, with file handling, the STL and exception handling.
+
+Evaluator question: **how are duplicate complaints handled?**
+
+### Phase II: first working version (October 2026)
+
+Code and documents: [`phase 2 codes./`](phase%202%20codes./) (see its [`readme.md`](phase%202%20codes./readme.md)), Phase II report and PPT in the same folder.
+
+- **C module (`complaint_ds.c`):** complaints in a **singly linked list**, a **linked-node priority queue** (High, Medium, Low, first-come first-served within a level), priority sorting, search by ID, filtering and statistics. A timestamped status history is kept in `status_history.txt`.
+- **C++ console (`main.cpp`, `Complaint.h`):** citizen and admin menus. It calls the C module through `extern "C"`. Priority was set automatically from words in the description.
+- **Website prototype:** `index.html`, `register.html`, `track.html` and `admin.html`, with `script.js` and `style.css`. It stored data in the browser's `localStorage` and rejected exact duplicates (same category, location and text). It was **standalone**: it did not share data with the console app.
+- **Phase II testing (from the report):** registration and tracking, the data structures and prioritisation, and admin management all passed.
+
+Evaluator feedback: **improve the terminal output** and **keep the website in sync with the data**.
+
+### Phase III: final system (October–November 2026)
+
+Code: [`phase 3 codes/`](phase%203%20codes/)
+
+The engine was rewritten as separate modules, and both interfaces now share it. The table compares the Phase I plan with what we built:
+
+| Planned in Phase I / built in Phase II | Final Phase III design | Why |
+|---|---|---|
+| Linked-list complaint storage | Records in text files, loaded into arrays | Every operation re-reads the shared files, so the console app and the website always see the latest data. Arrays also suit the heap. |
+| Linked-node priority queue (High/Medium/Low) | **Array max-heap** on a 1–10 severity score, older complaint first on a tie | Insert and extract are O(log n) instead of O(n). The score comes from the text, and an admin can change it. |
+| Exact-match duplicates (website only) | **Similarity-based duplicate detection** (Jaccard, Levenshtein, category, location) | It catches reworded repeats and avoids false matches such as "AC not working" and "Fan not working". |
+| Hashing for department mapping | **Hash table** (djb2, separate chaining) for the NLP keyword dictionaries | Each of the five categories maps directly to one department. The many keyword lookups needed fast O(1) average search. |
+| Graph with BFS/DFS for routing | **Weighted graph** of 18 Dehradun locations, **Dijkstra** shortest path | Roads have different lengths, and BFS ignores edge weights. |
+| BST for indexing | Not built | Lookups scan the file. With at most 2,000 complaints, this was fast enough. |
+| C++ exception handling and templates | Not used. Errors are passed as result codes (`WfResult`) shared with the C engine. `std::string` and `std::vector` are used. | One error format works for both the console app and the website. |
+| Standalone website using `localStorage` | Website on the **same data files**, writing through the **same C engine** | Both interfaces apply the same rules, and a change made in one appears in the other. |
+
+New in Phase III:
+- a shared workflow state machine;
+- a cross-process file lock;
+- live text analysis on the website;
+- dashboards and a city map;
+- a synthetic dataset generator;
+- a data repair tool; and
+- measured evaluation and stress tests.
+
+## How the evaluators' feedback was addressed
+
+| Feedback | What we did |
+|---|---|
+| **Phase I: how are duplicates handled?** | `duplicate_detector.c` compares a new complaint with every earlier open complaint. The score is `(0.4·Jaccard + 0.3·Levenshtein + 0.2·same category + 0.1·same location) × title penalty`, computed after common words are removed. The threshold depends on context: 0.75 for the same user, 0.82 for the same location, 0.88 otherwise. A duplicate is **flagged and linked to the original, not deleted**, and the website shows a "Why flagged?" breakdown of each component. Complaints closed before the new one was made are not matched. |
+| **Phase II: improve the terminal output** | A `Dashboard` class gives the console colour-coded severity and status (ANSI colours), box-drawing frames and UTF-8 output on Windows (`SetConsoleMode`, `SetConsoleOutputCP`). Input is read one line at a time, so long or unexpected input doesn't break the menus. |
+| **Phase II: sync the website with the data** | The Phase III website reads the same `data/*.txt` files as the console app. It sends every analysis and every change through `bin/engine_cli`, which runs the same C engine and workflow rules. A lock on `data/.lock` lets both run at the same time without losing records. |
+
+## Final system: features
+
+- **Accounts:** citizens sign up and log in. The role decides the menu: citizen, admin, department officer or field worker.
+- **Text analysis (rule-based, deterministic):**
+  - severity 1–10 from weighted keywords, with negation ("not a fire"), amplifiers ("very") and simple word forms ("accidents" matches "accident");
+  - a suggested category out of Water Supply, Electricity, Roads & Transport, Sanitation and Public Safety; and
+  - a spam check.
+- **Duplicate detection:** described in the table above.
+- **Priority review:** pending complaints come out of a max-heap, most severe first.
+- **Workflow, enforced for every interface:** `PENDING → REVIEWED → ASSIGNED → IN_PROGRESS → COMPLETED`.
+  1. The admin reviews the complaint and routes it to a department.
+  2. The department officer assigns an available worker.
+  3. The worker starts the task and gets a shortest route, then marks it complete.
+- **Routing:** Dijkstra's algorithm on a road graph of 18 Dehradun locations and 32 roads, with approximate distances in km.
+- **Statistics:** city-wide and per-department counts, plus website dashboards (status, category, severity, monthly trend, resolution time, locations).
+- **Storage:** pipe-delimited text files, written through a temporary file that replaces the original. A cross-process lock is held during each change, and every action is recorded in an activity log.
 
 | Role | Main operations |
 |---|---|
-| `USER` | Submit complaints, view and track personal complaints, and view a profile. |
-| `ADMIN` | Review pending complaints by priority, view all complaints and statistics, escalate severity, assign complaints to departments, manage departments and workers, and view the city map. |
-| `DEPT_OFFICER` | View complaints and statistics for the officer's department, assign department workers, and view worker status. |
-| `WORKER` | View assigned tasks, request an optimized route, mark tasks complete, update location, and view a profile. |
+| Citizen (`USER`) | Submit a complaint (with live analysis on the website), track own complaints, view profile |
+| `ADMIN` | Review the priority queue, escalate severity, route to departments, view all complaints, statistics and the city map, manage departments and workers |
+| `DEPT_OFFICER` | See the department's complaints and statistics, assign an available worker (with road distances), see worker load |
+| `WORKER` | See assigned tasks, start a task with its shortest route, complete it, update location, switch between available and busy |
 
-New registrations create `USER` accounts. The account role determines which C++ subclass and menu are created at login.
+## Architecture
 
-## Technical design
-
-- **Language/toolchain:** C engine and C++11 interface, built with GCC/G++ and GNU Make.
-- **Engine (`src/engine/`):**
-  - `file_manager.c` — pipe-delimited persistence, record queries and updates, statistics, initialization, and activity logging.
-  - `nlp_analyzer.c` — lowercase tokenization, keyword dictionaries, severity analysis, category suggestions, and irrelevance detection.
-  - `duplicate_detector.c` — Jaccard and Levenshtein similarity with category/location weighting and duplicate thresholds.
-  - `priority_queue.c` — dynamically sized max-heap for severity-ordered complaints.
-  - `route_optimizer.c` — 18-node Dehradun graph and Dijkstra shortest-path search.
-  - `hash_table.c` — separate-chaining hash table used for keyword lookup.
-- **Interface (`src/interface/`):** C++ classes for users, administrators, department officers, field workers, authentication, dashboards, and menu flow.
-- **Entry point:** `main.cpp` initializes the menu controller. On Windows it enables terminal color support and sets the working directory to the project root based on the executable location.
-- **Limits:** Core capacities and text lengths are defined in `include/engine/complaint_types.h`; current limits include 2,000 complaints, 200 user records, 10 departments, 50 workers, and 18 graph locations.
-
-The NLP component is deterministic and dictionary/rule based; it does not call an external NLP service or load a trained machine-learning model.
-
-## Build and run
-
-Install a Windows-compatible GCC/G++ toolchain and GNU Make (for example, MinGW-w64 with `mingw32-make`). Run the following from the project root:
-
-```powershell
-mingw32-make
-.\bin\complaint_analyzer.exe
+```text
+ Console app (C++)                          Website (browser, JavaScript)
+ main.cpp -> MenuSystem -> Person*          web/static/*  --fetch /api-->  web/server.py (Python)
+          |                                                                     | runs bin/engine_cli
+          +-----------------------------+---------------------------------------+
+                                        |
+                          C ENGINE  (src/engine/*.c)
+        workflow -> nlp_analyzer, duplicate_detector, priority_queue, route_optimizer, hash_table
+                          file_manager  (lock on data/.lock)
+                                        |
+                          data/*.txt  (pipe-delimited records)
 ```
 
-If GNU Make is available as `make`, use `make` in place of `mingw32-make`. The default build target compiles the C and C++ sources and links `bin/complaint_analyzer.exe`. The Makefile also provides:
+`engine_cli` reads free text from standard input, never from shell arguments, and prints one JSON object per command. The website and the console app therefore run the same C code on the same files.
 
-```powershell
-mingw32-make run
-mingw32-make clean
-mingw32-make cleandata
-```
+## Concepts and technologies
 
-`run` builds and starts the application. **`clean` removes `obj/` and `bin/`, including files stored under `bin/`. `cleandata` removes the root `data/` directory, including persisted users, complaints, departments, and logs.** Back up any data you need before using either cleanup target.
+| Area | What is used | Where (in `phase 3 codes/`) |
+|---|---|---|
+| Data structures | Hash table with separate chaining and the djb2 hash; max-heap in a growable array (`realloc`); weighted graph as an adjacency matrix; C structs | `hash_table.c`, `priority_queue.c`, `route_optimizer.c`, `complaint_types.h` |
+| Algorithms | Dijkstra (array version, O(V²)) with path reconstruction; Levenshtein edit distance (dynamic programming with two rows); Jaccard set similarity; heapify up and down | `route_optimizer.c`, `duplicate_detector.c`, `priority_queue.c` |
+| Text analysis | Tokenizing; weighted keyword dictionaries; negation and amplifiers; suffix rules; stop words; spam rules | `nlp_analyzer.c`, `duplicate_detector.c` |
+| OOP (C++11) | Abstract base class `Person` with pure virtual functions and a virtual destructor; inheritance (`User`, `Admin`, `DepartmentOfficer`, `Worker`); runtime polymorphism (the `AuthManager::login` factory returns a `Person*`); encapsulation; static utility class `Dashboard` | `include/interface/`, `src/interface/` |
+| C and C++ together | `extern "C"` in the engine headers | `include/engine/*.h` |
+| Files and concurrency | Text records written through a temporary file and an atomic replace; lock across processes (`CreateFileA` share mode on Windows, `flock` elsewhere) | `file_manager.c` |
+| Workflow | Fixed status order, checked the same way for both interfaces, with role checks | `workflow.c` |
+| Web server | Python standard library: `http.server` with threads, `subprocess`, sessions (`HttpOnly`, `SameSite=Strict`), login throttling, `hmac.compare_digest`, Content-Security-Policy | `web/server.py` (upload pending) |
+| Web frontend | JavaScript modules, hash routing, `fetch`, SVG charts and map drawn in code, light and dark themes, text nodes only (no `innerHTML`) | `web/static/` (upload pending) |
+| Build and tests | GNU Make; GCC/G++ `-Wall -Wextra -O2`; duplicate test, NLP evaluation, stress test | `Makefile`, `test_duplicate.c`, `tools/` |
 
-## Using the application
-
-1. Start the executable and choose **Login** or **Sign Up**.
-2. Sign in with an account whose role has the required operation.
-3. For a new complaint, enter the title and description. The application displays its severity estimate and category suggestion; the category can be accepted or selected from the supported list.
-4. Administrators review pending complaints and route them to departments. Department officers can assign workers. Workers can view tasks, calculate routes, update their location, and mark work complete.
-5. Use the role menu's logout option to return to the main menu.
-
-On first startup, the application creates the root `data/` directory and initializes missing user, department, complaint, and log files. Default accounts are seeded only when `data/users.txt` does not already exist. Existing files are not automatically reset or reseeded.
-
-## Data files
-
-The application reads and writes data relative to the project root:
-
-| File | Contents |
-|---|---|
-| `data/users.txt` | User records, including citizen, admin, officer, and worker accounts. Workers are represented as user records with role `WORKER`; there is no separate workers file in the current data format. |
-| `data/complaints.txt` | Complaint records. |
-| `data/departments.txt` | Department IDs, names, officer usernames, and complaint counters. |
-| `data/logs.txt` | Timestamped application activity, such as sign-ins and complaint actions. |
-
-Records are text rows separated by `|`. Complaint rows contain 17 fields in this order:
-
-1. complaint ID
-2. submitting user ID
-3. title
-4. description
-5. category
-6. location name
-7. location ID
-8. final severity
-9. NLP severity score
-10. duplicate flag
-11. ID of the original complaint, if duplicated
-12. irrelevant/spam flag
-13. status
-14. department
-15. worker ID, or `-1` if unassigned
-16. submission date
-17. completion date
-
-The route graph uses these location IDs: Clock Tower (0), Paltan Bazaar (1), Rajpur Road (2), ISBT Dehradun (3), Dehradun Railway Stn (4), Race Course (5), Dalanwala (6), Clement Town (7), Prem Nagar (8), Sahastradhara (9), Ballupur Chowk (10), GMS Road (11), Nagar Nigam (12), Doon Hospital (13), Survey Chowk (14), Rispana Bridge (15), Collectorate (16), and IT Park Sahastradhara (17).
-
-## Dataset generator
-
-`generate_dataset.py` creates synthetic citizen accounts and complaint records for Dehradun. Its source specifies a fixed random seed, 50 generated citizen accounts, and 1,000 generated complaints, and it prints category, severity, and status counts.
-
-Run it from the project root with:
-
-```powershell
-python generate_dataset.py
-```
-
-**Back up `data/users.txt` and `data/complaints.txt` first.** The generator writes new contents to those files rather than appending to them; running it can replace existing application data. The script chooses the first available `data/` or `bin/data/` directory, which is normally the root `data/` directory in this project.
-
-## Tests
-
-`test_duplicate.c` is a standalone duplicate-detection test program. It covers differently worded complaints about different objects, a re-submission by the same user, unrelated categories, and reports of the same issue at one location. It is not wired into a Makefile test target.
-
-With GCC installed and `bin/` present, compile and run it from the project root:
-
-```powershell
-gcc -Wall -Wextra -I. test_duplicate.c src/engine/duplicate_detector.c src/engine/nlp_analyzer.c src/engine/hash_table.c -o bin/test_duplicate.exe
-.\bin\test_duplicate.exe
-```
-
-## Limits and security notes
-
-- This is a local, interactive console application; the current persistence layer is plain text rather than a database.
-- Passwords are stored and compared as plain text in `data/users.txt`. Do not use real or reused passwords, and do not expose real personal information in sample data.
-- The file format uses `|` as a field separator. Entered fields containing that delimiter are not escaped by the documented storage format.
-- The NLP and duplicate detector are rule-based aids. Their outputs should be reviewed by staff rather than treated as authoritative decisions.
-- The route graph is a fixed model with approximate edge distances, not a live map or traffic service.
-- Several paths and data structures have fixed maximum capacities declared in `complaint_types.h`.
-
-## Project layout
+## Repository layout
 
 ```text
 .
-├── Makefile
-├── main.cpp
-├── generate_dataset.py
-├── test_duplicate.c
-├── data/
-│   ├── complaints.txt
-│   ├── departments.txt
-│   ├── logs.txt
-│   └── users.txt
-├── include/
-│   ├── engine/       # C data types and engine interfaces
-│   └── interface/    # C++ role and UI interfaces
-├── src/
-│   ├── engine/       # C storage, analysis, queue, and routing modules
-│   └── interface/    # C++ application and role implementations
-├── obj/              # Build object files
-└── bin/              # Built executable and generated build output
+├── README.md                 this file
+├── phase 1/                  Phase I proposal report and PPT
+├── phase 2 codes./           Phase II prototype
+│   ├── complaint_ds.c/.h     linked list, linked-node priority queue, sorting, search
+│   ├── Complaint.h, main.cpp C++ console application
+│   ├── *.html, script.js, style.css   standalone website (localStorage)
+│   ├── complaints.txt, status_history.txt
+│   ├── readme.md             Phase II documentation
+│   └── PhaseII_PPT.pdf, phase II report.pdf
+└── phase 3 codes/            final system
+    ├── Makefile, main.cpp, README.md, generate_dataset.py, test_duplicate.c
+    ├── include/engine/       C data types and engine interfaces
+    ├── include/interface/    C++ class declarations
+    ├── src/engine/           C engine: storage, NLP, duplicates, heap, routing, workflow
+    ├── src/interface/        C++ console application
+    ├── src/cli/              engine_cli: JSON bridge for the website
+    ├── tools/                eval_nlp.c/.py, stress_test.py, repair_data.py
+    └── web/                  website (upload pending)
 ```
 
-## History and dates
+`data/`, `bin/` and `obj/` are not in the repository. The Makefile creates `bin/` and `obj/`, and the program creates `data/` with default accounts on first run.
 
-| Illustrative date | Example contribution | Relevant files |
+## Getting the code
+
+The folder `phase 2 codes.` ends with a dot, and Windows can't create such a folder. On Windows, a plain `git clone` therefore fails at checkout. Fetch only the other folders instead:
+
+```powershell
+git clone --no-checkout https://github.com/devrajrawat9027562124-web/Smart-Public_Complaint_Analyzer.git
+cd Smart-Public_Complaint_Analyzer
+git -c core.protectNTFS=false restore --source=main --worktree -- "phase 3 codes" "phase 1" README.md
+```
+
+On Linux and macOS, a normal `git clone` works.
+
+## Build and run
+
+Requirements: GCC/G++ and GNU Make (on Windows, MinGW with `mingw32-make`), plus Python 3 for the tools and the website.
+
+```powershell
+cd "phase 3 codes"
+mingw32-make                  # builds bin/complaint_analyzer.exe and bin/engine_cli.exe
+.\bin\complaint_analyzer.exe  # console app
+python generate_dataset.py    # optional: 1,000 sample complaints (backs up data/ first)
+mingw32-make test             # duplicate-detection test
+mingw32-make eval             # NLP measured against hand-labelled templates
+mingw32-make stress           # parallel-write test on a copy of data/
+mingw32-make web              # website at http://localhost:8000 (needs web/, not uploaded yet)
+```
+
+On first run, the program creates `data/` with demo accounts. **These are for local testing only.**
+
+| Role | Username | Password |
 |---|---|---|
-| 2026-09-17 | Organized the project entry point and initial build targets for the mixed C/C++ application. | `main.cpp`, `Makefile` |
-| 2026-09-18 | Defined shared complaint, user, department, location, and statistics structures and core capacity limits. | `include/engine/complaint_types.h` |
-| 2026-09-19 | Added the hash-table interface and its separate-chaining data structure for keyword lookup. | `include/engine/hash_table.h`, `src/engine/hash_table.c` |
-| 2026-09-20 | Implemented hash-table initialization, insertion, search, removal, and cleanup operations. | `src/engine/hash_table.c` |
-| 2026-09-21 | Set up file-manager interfaces for user and complaint records, departments, and activity logs. | `include/engine/file_manager.h`, `src/engine/file_manager.c` |
-| 2026-09-22 | Added initialization of missing data files and default department and role records. | `src/engine/file_manager.c`, `data/departments.txt` |
-| 2026-09-23 | Implemented user record loading, saving, authentication, ID generation, and username checks. | `src/engine/file_manager.c`, `include/engine/file_manager.h` |
-| 2026-09-24 | Added the C++ person abstraction and conversion between interface users and engine records. | `include/interface/Person.h`, `src/interface/Person.cpp` |
-| 2026-09-25 | Added role-based login construction and citizen account registration checks. | `include/interface/AuthManager.h`, `src/interface/AuthManager.cpp` |
-| 2026-09-26 | Created shared console presentation helpers for banners, complaint cards, status, severity, and statistics. | `include/interface/Dashboard.h`, `src/interface/Dashboard.cpp` |
-| 2026-09-27 | Connected the top-level application loop to login, signup, logout, and role-specific menus. | `include/interface/MenuSystem.h`, `src/interface/MenuSystem.cpp`, `main.cpp` |
-| 2026-09-28 | Added the citizen dashboard and complaint-list and tracking menu flows. | `include/interface/User.h`, `src/interface/User.cpp` |
-| 2026-09-29 | Implemented complaint entry and integrated text analysis and category selection into submission. | `src/interface/User.cpp`, `include/engine/nlp_analyzer.h` |
-| 2026-09-30 | Added lowercase tokenization and keyword dictionaries for severity scoring. | `src/engine/nlp_analyzer.c`, `include/engine/nlp_analyzer.h` |
-| 2026-10-01 | Extended text analysis with negation and amplifier handling and category keyword matching. | `src/engine/nlp_analyzer.c` |
-| 2026-10-02 | Added irrelevant-content detection and connected analysis results to complaint submission. | `src/engine/nlp_analyzer.c`, `src/interface/User.cpp` |
-| 2026-10-03 | Implemented text similarity primitives and a weighted score for comparing complaints. | `include/engine/duplicate_detector.h`, `src/engine/duplicate_detector.c` |
-| 2026-10-04 | Refined duplicate matching with stop-word filtering, title-subject comparison, and user/location-sensitive thresholds. | `src/engine/duplicate_detector.c` |
-| 2026-10-05 | Added standalone examples covering likely duplicates and similar-looking, unrelated complaints. | `test_duplicate.c` |
-| 2026-10-06 | Implemented the complaint severity max-heap and priority queue operations. | `include/engine/priority_queue.h`, `src/engine/priority_queue.c` |
-| 2026-10-07 | Added administrator review of pending complaints in descending severity order. | `include/interface/Admin.h`, `src/interface/Admin.cpp` |
-| 2026-10-08 | Added administrator workflows for viewing complaints, escalation, and department assignment. | `src/interface/Admin.cpp`, `src/engine/file_manager.c` |
-| 2026-10-09 | Added department-officer views for department complaints and worker assignment. | `include/interface/DepartmentOfficer.h`, `src/interface/DepartmentOfficer.cpp` |
-| 2026-10-10 | Implemented the fixed Dehradun location graph and shortest-path calculation. | `include/engine/route_optimizer.h`, `src/engine/route_optimizer.c` |
-| 2026-10-11 | Added worker task views, task completion, location updates, and route display integration. | `include/interface/Worker.h`, `src/interface/Worker.cpp` |
-| 2026-10-12 | Expanded file-manager query and statistics operations used by user, department, and admin dashboards. | `src/engine/file_manager.c`, `include/engine/file_manager.h` |
-| 2026-10-13 | Added a reproducible synthetic-data generator for citizen accounts and Dehradun complaint records. | `generate_dataset.py` |
-| 2026-10-14 | Populated and reviewed sample users, complaints, departments, and activity data for local runs. | `data/users.txt`, `data/complaints.txt`, `data/departments.txt`, `data/logs.txt` |
-| 2026-10-15 | Consolidated build dependencies and Windows-oriented build, run, and cleanup targets. | `Makefile`, `main.cpp` |
-| 2026-10-16 | Documented the current feature set, data formats, setup, test instructions, and operational limitations. | `README.md` |
+| Admin | `admin` | `admin123` |
+| Department officers | `water_officer`, `elec_officer`, `road_officer`, `sanit_officer`, `safety_officer` | `officer123` |
+| Field workers | `water_worker1`, `water_worker2`, `elec_worker1`, … (two per department) | `worker123` |
+
+New sign-ups are citizen accounts.
+
+## Testing and results
+
+All results below were measured on 2026-11-22. The Phase III code in this repository was also built from a clean copy that day, and its duplicate test passed.
+
+| Test | Result |
+|---|---|
+| Duplicate detection (`mingw32-make test`) | All 3 critical cases pass: different objects with similar wording are not flagged (score 0.17); a re-post by the same user is flagged (score 0.87); unrelated categories are not flagged (0.11). The informational case, the same issue reported by two users at one place, scores 0.53, below its 0.82 threshold, so it is **not** flagged. |
+| NLP evaluation (`mingw32-make eval`, 150 hand-labelled templates) | Severity mean absolute error **1.41**, within ±1: **61%**, Spearman **0.75**; category suggestion correct **80%**; real complaints flagged as spam: **0**; critical templates (9–10) scored 4 or less: **0**; templates with no severity keyword (score 1): 15 |
+| Concurrency (`mingw32-make stress`) | 60 location updates alongside 60 reads: 68 of 68 accounts kept. 80 submissions alongside 200 severity changes: 80 of 80 saved, each with its own ID, none repeated. |
+
+The NLP labels and the keyword lists were written by the same team, and the templates are also the source of the sample data. So the evaluation shows how consistent the rules are, not how accurate they would be on real complaints. Scoring by the strongest keyword instead of the average was tried and did worse (error 1.83, Spearman 0.67).
+
+## Known limitations
+
+- **Passwords are stored in plain text** in `data/users.txt`, and default demo accounts are created on first run. Don't use real passwords, and don't put the website on the public internet.
+- **Text files, not a database.** Each operation reads the whole file. Capacities are fixed in `complaint_types.h` (2,000 complaints, 200 users). Complaints after row 2,000 are saved but not loaded, so the queue and the duplicate check don't see them.
+- **The text analysis is keyword-based and English-only.** A complaint with no keyword in the dictionary gets severity 1: "No water supply" scores 1/10. Averaging can lower the score of a serious complaint that also uses mild words. Typos, Hindi and Hinglish are not understood, and words aren't interpreted by context ("dead end").
+- **Duplicate detection can miss reworded reports** of the same problem by different people at the same place (see the test above). Nearly identical text at different places can be flagged.
+- **The road graph is a fixed model** with approximate distances, not a live map.
+- The **website source** (`web/`) has not been uploaded to this repository yet.
+
+## Future work
+
+- Store salted, slow password hashes (for example bcrypt) instead of plain text, and remove the fixed demo passwords.
+- Move storage to a database such as SQLite and remove the 2,000-complaint limit.
+- Improve severity and duplicate detection with a model trained on real, labelled complaints, measured against the current rules.
+- Support Hindi and Hinglish, and tolerate typos.
+- Use real coordinates and travel times for routing.
+
+## Timeline
+
+| Date | Milestone |
+|---|---|
+| 2026-09-01 | Repository created; Phase I proposal report and PPT uploaded |
+| 2026-10-16 to 10-22 | Phase II: C linked-list module, C++ console, website prototype, Phase II report and PPT |
+| Oct–Nov 2026 | Phase III developed: modular C engine, shared workflow, C++ console rewrite, `engine_cli`, website on shared data, file lock, NLP evaluation and stress test |
+| 2026-11-22 | Phase III code uploaded to `phase 3 codes/` (engine and console; website pending); Phase I and II documents moved into their phase folders; this README updated |
