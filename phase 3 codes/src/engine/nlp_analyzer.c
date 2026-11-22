@@ -4,7 +4,6 @@
  * amplifier/negation handling, category suggestion, and spam detection.
  */
 
-
 #include "../../include/engine/nlp_analyzer.h"
 #include <stdlib.h>
 #include <string.h>
