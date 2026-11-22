@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Complaint Analyzer</title>
+  <meta name="description" content="Report civic problems in Dehradun and follow them until they are fixed.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231D5C4D'/%3E%3Cpath d='M7 23 L14 13 L19 18 L25 9' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='25' cy='9' r='3.5' fill='%23F2B705'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/theme-init.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="app" aria-busy="true">
+    <div class="boot">
+      <div class="boot-mark" aria-hidden="true"></div>
+      <p>Loading the complaint desk…</p>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <noscript><p class="noscript">This site needs JavaScript to run.</p></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
