@@ -3,6 +3,7 @@
  * Complaint workflow rules shared by the console app and the web server.
  * See workflow.h for the contract of each operation.
  */
+
 #include "../../include/engine/workflow.h"
 #include "../../include/engine/file_manager.h"
 #include "../../include/engine/duplicate_detector.h"
