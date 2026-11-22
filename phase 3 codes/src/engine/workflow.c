@@ -13,7 +13,7 @@
 #include <string.h>
 #include <ctype.h>
 
-/* ─── Helpers ─── */
+/* ─── Helpers ─── *
 
 static WfResult result(int code, const char* fmt, const char* a, int n) {
     WfResult r;
